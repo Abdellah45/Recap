@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --color-on-error: #ffffff;
+  --color-surface-bright: #faf8ff;
+  --color-surface-container: #eaedff;
+  --color-surface-dim: #d2d9f4;
+  --color-error: #ba1a1a;
+  --color-primary-fixed: #e2dfff;
+  --color-on-surface: #131b2e;
+  --color-inverse-primary: #c3c0ff;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-fixed-variant: #783200;
+  --color-on-surface-variant: #464553;
+  --color-on-secondary-fixed-variant: #005048;
+  --color-on-error-container: #93000a;
+  --color-surface: #faf8ff;
+  --color-primary-container: #3730a3;
+  --color-secondary-container: #6df5e1;
+  --color-inverse-surface: #283044;
+  --color-on-tertiary-fixed: #341100;
+  --color-on-primary-fixed-variant: #3b35a7;
+  --color-surface-variant: #dae2fd;
+  --color-on-primary-container: #a9a7ff;
+  --color-tertiary-container: #722f00;
+  --color-on-secondary: #ffffff;
+  --color-on-tertiary-container: #ff9559;
+  --color-surface-container-lowest: #ffffff;
+  --color-inverse-on-surface: #eef0ff;
+  --color-on-primary-fixed: #0f0069;
+  --color-on-secondary-fixed: #00201c;
+  --color-tertiary-fixed-dim: #ffb690;
+  --color-tertiary-fixed: #ffdbca;
+  --color-surface-container-highest: #dae2fd;
+  --color-secondary: #006b5f;
+  --color-on-background: #131b2e;
+  --color-surface-tint: #544fc0;
+  --color-outline: #777584;
+  --color-surface-container-low: #f2f3ff;
+  --color-on-secondary-container: #006f64;
+  --color-error-container: #ffdad6;
+  --color-primary-fixed-dim: #c3c0ff;
+  --color-secondary-fixed: #71f8e4;
+  --color-surface-container-high: #e2e7ff;
+  --color-secondary-fixed-dim: #4fdbc8;
+  --color-primary: #1f108e;
+  --color-tertiary: #4f1e00;
+  --color-on-primary: #ffffff;
+  --color-background: #faf8ff;
+  --color-outline-variant: #c8c4d5;
+
+  --font-headline: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+}
+
+/* Custom utility classes */
+.primary-gradient {
+  background: linear-gradient(135deg, #1f108e 0%, #3730a3 100%);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.tonal-nesting {
+  background-color: rgba(234, 237, 255, 0.3);
+}
+
+.ambient-shadow {
+  box-shadow: 0 4px 20px rgba(19, 27, 46, 0.04), 0 12px 40px rgba(19, 27, 46, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+  background-color: #faf8ff;
+  color: #131b2e;
+}
