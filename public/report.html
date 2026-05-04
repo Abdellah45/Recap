@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Recap — Project Progress Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #ffffff;
+    color: #131b2e;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  /* ── COVER PAGE ── */
+  .cover {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1f108e 0%, #3730a3 60%, #544fc0 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+    page-break-after: always;
+    color: white;
+  }
+  .cover-logo {
+    font-family: 'Manrope', sans-serif;
+    font-size: 64px;
+    font-weight: 800;
+    letter-spacing: 12px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .cover-tagline {
+    font-size: 16px;
+    opacity: 0.8;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+  .cover-divider {
+    width: 80px;
+    height: 3px;
+    background: rgba(255,255,255,0.4);
+    margin: 0 auto 60px;
+    border-radius: 2px;
+  }
+  .cover-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .cover-subtitle {
+    font-size: 14px;
+    opacity: 0.7;
+    margin-bottom: 60px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .cover-meta-item {
+    text-align: center;
+  }
+  .cover-meta-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 4px;
+  }
+  .cover-meta-value {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* ── CONTENT PAGES ── */
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 60px 60px;
+  }
+
+  /* Page break helper */
+  .page-break { page-break-before: always; }
+
+  /* ── SECTION HEADER ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #544fc0;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: #1f108e;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  h2 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f108e;
+    margin-top: 40px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #eaedff;
+  }
+  h3 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #131b2e;
+    margin-top: 24px;
+    margin-bottom: 8px;
+  }
+  p { margin-bottom: 12px; color: #464553; }
+
+  /* ── HORIZONTAL RULE ── */
+  hr { border: none; border-top: 1px solid #eaedff; margin: 32px 0; }
+
+  /* ── TABLE ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 12.5px;
+  }
+  th {
+    background: #1f108e;
+    color: white;
+    font-weight: 600;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 9px 14px;
+    color: #464553;
+    border-bottom: 1px solid #f2f3ff;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #faf8ff; }
+  tr:hover td { background: #f2f3ff; }
+
+  /* ── CODE BLOCK ── */
+  pre {
+    background: #0f0f1a;
+    color: #c3c0ff;
+    padding: 20px 24px;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 1.8;
+    margin: 16px 0 24px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+  code {
+    background: #eaedff;
+    color: #1f108e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-family: 'Courier New', monospace;
+  }
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  /* ── STATUS BADGES ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge-done { background: #d4f5e9; color: #006b5f; }
+  .badge-next { background: #fff3e0; color: #e65100; }
+  .badge-soon { background: #eaedff; color: #3730a3; }
+
+  /* ── STEP BOX ── */
+  .step-box {
+    border-left: 4px solid #1f108e;
+    background: #faf8ff;
+    padding: 16px 20px;
+    margin: 12px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .step-box .step-num {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #544fc0;
+    margin-bottom: 4px;
+  }
+  .step-box .step-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: #131b2e;
+    margin-bottom: 4px;
+  }
+  .step-box p { margin: 0; font-size: 12px; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 16px 0 24px;
+  }
+  .flow-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .flow-node {
+    background: #1f108e;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    min-width: 160px;
+    text-align: center;
+  }
+  .flow-arrow {
+    font-size: 18px;
+    color: #c3c0ff;
+    line-height: 1.6;
+    padding-left: 72px;
+  }
+  .flow-desc {
+    font-size: 11.5px;
+    color: #464553;
+    padding-top: 7px;
+  }
+
+  /* ── INFO BOX ── */
+  .info-box {
+    background: #eaedff;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 12px;
+    color: #1f108e;
+  }
+  .info-box strong { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ── FILE TREE ── */
+  .filetree {
+    background: #0f0f1a;
+    color: #a9a7ff;
+    padding: 20px 24px;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 2;
+    margin: 16px 0 24px;
+  }
+  .filetree .dir { color: #6df5e1; }
+  .filetree .file { color: #c3c0ff; }
+  .filetree .comment { color: #464553; font-style: italic; }
+
+  /* ── ROADMAP ── */
+  .roadmap-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f2f3ff;
+  }
+  .roadmap-week {
+    background: #eaedff;
+    color: #1f108e;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    min-width: 72px;
+    text-align: center;
+  }
+  .roadmap-week.done { background: #1f108e; color: white; }
+  .roadmap-title { font-weight: 600; font-size: 13px; flex: 1; }
+  .roadmap-desc { font-size: 11.5px; color: #777584; }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 40px;
+    color: #c8c4d5;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  @media print {
+    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .cover { min-height: 100vh; }
+    .page-break { page-break-before: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════ COVER ════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">Recap</div>
+  <div class="cover-tagline">AI-Powered Daily Work Logger</div>
+  <div class="cover-divider"></div>
+  <div class="cover-title">Project Progress Report</div>
+  <div class="cover-subtitle">Week 1–2 Foundation — Full Development Walkthrough</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Date</div>
+      <div class="cover-meta-value">April 17, 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Developer</div>
+      <div class="cover-meta-value">Abdellah Bahmani</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Stage</div>
+      <div class="cover-meta-value">Week 1–2 of 8</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Repository</div>
+      <div class="cover-meta-value">github.com/Abdellah45/Recap</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ PAGE 1 — OVERVIEW ════════════════════════════════ -->
+<div class="page">
+  <div class="section-label">Section 01</div>
+  <h1>Project Overview</h1>
+  <p>Recap is a daily work logging web application designed for Moroccan tech startups and agencies. Employees log their day in under 60 seconds through a simple text dump, which an AI processes into structured summaries. Managers receive real-time, AI-generated reports of their team's progress — without needing to chase updates.</p>
+
+  <h2>The Problem Being Solved</h2>
+  <table>
+    <tr><th>Pain Point</th><th>Impact</th></tr>
+    <tr><td>Managers spend 3–5 hours/week chasing status updates</td><td>Lost productivity across management layer</td></tr>
+    <tr><td>Surveillance tools breed distrust</td><td>54% of employees would quit if monitored this way</td></tr>
+    <tr><td>Existing tools lack Moroccan cultural/language support</td><td>Low adoption in local market</td></tr>
+  </table>
+
+  <h2>Core Concept</h2>
+  <p>The logging flow is designed to be completed in under 90 seconds:</p>
+  <div class="flow">
+    <div class="flow-item">
+      <div class="flow-node">1. Employee logs in</div>
+      <div class="flow-desc">Visits the Daily Log page → sees the text dump area</div>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item">
+      <div class="flow-node">2. Free-text dump</div>
+      <div class="flow-desc">Writes anything about their day (no structure required)</div>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item">
+      <div class="flow-node">3. AI processes</div>
+      <div class="flow-desc">Gemini identifies top tasks + asks ONE smart follow-up</div>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item">
+      <div class="flow-node">4. Summary saved</div>
+      <div class="flow-desc">2–3 sentence AI summary stored + blockers flagged</div>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item">
+      <div class="flow-node">5. Manager sees it</div>
+      <div class="flow-desc">Dashboard updates with team summaries, sentiment, blockers</div>
+    </div>
+  </div>
+
+  <h2>Technology Stack</h2>
+  <table>
+    <tr><th>Layer</th><th>Technology</th><th>Reason</th></tr>
+    <tr><td>Frontend</td><td>Next.js 16.2.3 (App Router, TypeScript)</td><td>SSR, file-based routing, Vercel-native</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS v4</td><td>Utility-first, pairs with shadcn-style design tokens</td></tr>
+    <tr><td>Auth + DB</td><td>Supabase (PostgreSQL + RLS)</td><td>Built-in auth, real-time, instant API</td></tr>
+    <tr><td>AI Engine</td><td>Gemini API (gemini-1.5-flash)</td><td>Fast, bilingual EN/FR, free tier available</td></tr>
+    <tr><td>Hosting</td><td>Vercel</td><td>GitHub integration, zero-config Next.js</td></tr>
+    <tr><td>Design</td><td>Stitch (Google)</td><td>Generated HTML + design system document</td></tr>
+  </table>
+</div>
+
+<!-- ════════════════════════════════ PAGE 2 — DESIGN ════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-label">Section 02</div>
+  <h1>UI Design System</h1>
+  <p>The design was created in <strong>Stitch (Google)</strong> and exported as a ZIP containing a full HTML prototype, a design specification document (<code>DESIGN.md</code>), and a reference screenshot. The design aesthetic is called <strong>"The Modern Riad"</strong> — inspired by Moroccan architectural philosophy.</p>
+
+  <h2>Design Philosophy</h2>
+  <p>The UI deliberately avoids the sterile, template-first look of Silicon Valley SaaS tools. Instead it uses <strong>Tonal Depth</strong> over rigid border lines, treating data as high-end editorial entries rather than rows in a table. The result is a workspace that feels premium — efficient enough for developers, sophisticated enough for executives.</p>
+
+  <h2>Color Palette</h2>
+  <table>
+    <tr><th>Token</th><th>Hex Code</th><th>Usage</th></tr>
+    <tr><td><code>primary</code></td><td>#1f108e</td><td>Nav active state, buttons, headings, primary CTAs</td></tr>
+    <tr><td><code>primary-container</code></td><td>#3730a3</td><td>Button gradient end, avatar backgrounds</td></tr>
+    <tr><td><code>secondary</code></td><td>#006b5f</td><td>Success states, AI Ready badge, progress indicators</td></tr>
+    <tr><td><code>tertiary-fixed</code></td><td>#ffdbca</td><td>Weekly Goal card background, blocker indicators</td></tr>
+    <tr><td><code>surface</code></td><td>#faf8ff</td><td>Page background (soft indigo-tinted white)</td></tr>
+    <tr><td><code>surface-container-lowest</code></td><td>#ffffff</td><td>Cards / elevated surfaces (the "pop")</td></tr>
+    <tr><td><code>surface-container-low</code></td><td>#f2f3ff</td><td>Input fields, Pro-Tips bento card</td></tr>
+    <tr><td><code>on-surface</code></td><td>#131b2e</td><td>Primary text (deep indigo-black, never pure black)</td></tr>
+    <tr><td><code>on-surface-variant</code></td><td>#464553</td><td>Secondary text, metadata, descriptions</td></tr>
+    <tr><td><code>error</code></td><td>#ba1a1a</td><td>Form validation errors</td></tr>
+  </table>
+
+  <h2>Typography</h2>
+  <table>
+    <tr><th>Role</th><th>Font</th><th>Weight</th><th>Usage</th></tr>
+    <tr><td>Display / Headlines</td><td>Manrope</td><td>700–800</td><td>Page titles, card headings, logo</td></tr>
+    <tr><td>Body / UI</td><td>Inter</td><td>400–600</td><td>Body text, labels, form fields, nav links</td></tr>
+  </table>
+
+  <h2>Key Design Rules</h2>
+  <div class="step-box">
+    <div class="step-num">Rule 1 — "No-Line" Rule</div>
+    <div class="step-title">No 1px borders for structural separation</div>
+    <p>Sections are separated using background-color shifts between surface tokens. This creates depth without visual noise.</p>
+  </div>
+  <div class="step-box">
+    <div class="step-num">Rule 2 — "Glass & Gradient" Rule</div>
+    <div class="step-title">Glassmorphism for floating elements</div>
+    <p>Navigation overlays use <code>rgba(255,255,255,0.8)</code> with <code>backdrop-filter: blur(12px)</code>. Buttons use a 135° gradient from primary to primary-container.</p>
+  </div>
+  <div class="step-box">
+    <div class="step-num">Rule 3 — Ambient Lighting</div>
+    <div class="step-title">No hard drop shadows</div>
+    <p>Shadows use <code>rgba(19,27,46,0.04–0.06)</code> layered — derived from the on-surface color, never pure black.</p>
+  </div>
+
+  <h2>Screen Designed (Stitch Prototype)</h2>
+  <p>The Stitch export contained one complete screen: the <strong>Daily Log page</strong>, which is the core "showpiece" of the application. It includes:</p>
+  <table>
+    <tr><th>Element</th><th>Description</th></tr>
+    <tr><td>Sidebar</td><td>Fixed 256px sidebar with nav links, user pill, EN/FR toggle, Sign Out</td></tr>
+    <tr><td>Page header</td><td>"Daily Log" headline (Manrope 48px bold) + date subtitle + "AI Analysis Ready" badge</td></tr>
+    <tr><td>Text area</td><td>Full-width white card with large textarea placeholder, "Process with AI ✨" button</td></tr>
+    <tr><td>Pro-Tips bento</td><td>2-column grid of tips with Material Symbols icons on indigo tinted background</td></tr>
+    <tr><td>Weekly Goal card</td><td>Orange tertiary card with goal text and percentage progress needle</td></tr>
+    <tr><td>Last 3 Days</td><td>Tonal-nested list rows showing recent log entries with check/warning icons</td></tr>
+  </table>
+</div>
+
+<!-- ════════════════════════════════ PAGE 3 — DATABASE ════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-label">Section 03</div>
+  <h1>Database Architecture</h1>
+  <p>The database runs on <strong>Supabase (PostgreSQL)</strong> with Row Level Security (RLS) enabled on every table. The schema is designed around the core entities of the product.</p>
+
+  <h2>Schema Design</h2>
+  <table>
+    <tr><th>Table</th><th>Key Columns</th><th>Purpose</th></tr>
+    <tr><td><code>companies</code></td><td>id, name, invite_code, created_at</td><td>Represents a workspace/organization. Each manager creates one; employees join via invite_code.</td></tr>
+    <tr><td><code>profiles</code></td><td>id (→ auth.users), full_name, role, company_id, language</td><td>Extends Supabase auth users with app-specific data. Role is either 'employee' or 'manager'.</td></tr>
+    <tr><td><code>daily_logs</code></td><td>id, user_id, raw_input, ai_summary, blocker_note, logged_at</td><td>Stores each daily log entry. raw_input is the text the user wrote; ai_summary and blocker_note are filled in by Gemini (Week 3-4).</td></tr>
+    <tr><td><code>tasks</code></td><td>id, log_id, title, is_blocker</td><td>Individual tasks extracted by AI from each log. Linked to daily_logs.</td></tr>
+  </table>
+
+  <h2>Full SQL Schema</h2>
+  <pre><code>-- Companies
+create table companies (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  invite_code text unique not null,
+  created_at timestamptz default now()
+);
+
+-- User Profiles (extends Supabase auth.users)
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  role text check (role in ('employee', 'manager')),
+  company_id uuid references companies(id),
+  language text default 'en' check (language in ('en', 'fr')),
+  created_at timestamptz default now()
+);
+
+-- Daily Logs
+create table daily_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references profiles(id) on delete cascade,
+  raw_input text not null,
+  ai_summary text,
+  blocker_note text,
+  logged_at date default current_date,
+  created_at timestamptz default now()
+);
+
+-- Tasks (extracted by AI)
+create table tasks (
+  id uuid primary key default gen_random_uuid(),
+  log_id uuid references daily_logs(id) on delete cascade,
+  title text not null,
+  is_blocker boolean default false
+);</code></pre>
+
+  <h2>Row Level Security Policies</h2>
+  <table>
+    <tr><th>Table</th><th>Policy</th><th>Rule</th></tr>
+    <tr><td>profiles</td><td>Own profile</td><td>Users can read/write only their own profile row</td></tr>
+    <tr><td>companies</td><td>Own company</td><td>Users can read only their company (by company_id)</td></tr>
+    <tr><td>companies</td><td>Insert (managers)</td><td>Authenticated users can insert a new company</td></tr>
+    <tr><td>daily_logs</td><td>Own logs</td><td>Users can read/write their own log entries only</td></tr>
+    <tr><td>tasks</td><td>Own tasks</td><td>Users can read/write tasks linked to their own logs</td></tr>
+  </table>
+</div>
+
+<!-- ════════════════════════════════ PAGE 4 — AUTH FLOW ════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-label">Section 04</div>
+  <h1>Authentication Flow</h1>
+  <p>Authentication uses <strong>Supabase Auth</strong> with email/password and email confirmation required. The flow is split into three stages to correctly handle the constraint that database writes (inserting into companies/profiles) can only happen <em>after</em> the user's email is confirmed and a live session exists.</p>
+
+  <h2>Stage 1 — Sign Up (<code>/onboarding</code>)</h2>
+  <p>The user enters their full name, email, and password. Supabase sends a confirmation email. The page immediately transitions to a "Check your inbox" holding screen. No database writes happen at this stage.</p>
+
+  <div class="info-box">
+    <strong>Key Design Decision</strong>
+    The sign-up and workspace setup were deliberately split into two separate routes. This prevents RLS violations that occur when code tries to insert rows into the database before the auth session is established.
+  </div>
+
+  <h2>Stage 2 — Email Confirmation (<code>/auth/callback</code>)</h2>
+  <p>When the user clicks the link in their email, Supabase redirects to <code>/auth/callback?code=...</code>. The route handler exchanges the code for a live session, then checks whether a profile row already exists for this user:</p>
+  <ul style="margin-left:20px;color:#464553;margin-bottom:16px;">
+    <li style="margin-bottom:6px;"><strong>New user (no profile):</strong> Redirected to <code>/onboarding/setup</code></li>
+    <li style="margin-bottom:6px;"><strong>Returning user (profile exists):</strong> Redirected directly to <code>/app/log</code></li>
+  </ul>
+
+  <h2>Stage 3 — Workspace Setup (<code>/onboarding/setup</code>)</h2>
+  <p>Now that the session is confirmed and active, the user picks their role and configures their workspace. Database writes happen safely here:</p>
+  <table>
+    <tr><th>Role</th><th>Input Required</th><th>Database Action</th></tr>
+    <tr><td>Manager</td><td>Company name</td><td>INSERT into companies (generates unique invite_code) → INSERT into profiles</td></tr>
+    <tr><td>Employee</td><td>Invite code (from manager)</td><td>SELECT company by invite_code → INSERT into profiles</td></tr>
+  </table>
+
+  <h2>Middleware Route Protection</h2>
+  <p>A Next.js middleware file (<code>src/middleware.ts</code>) runs on every request and enforces auth rules:</p>
+  <table>
+    <tr><th>Route Pattern</th><th>Unauthenticated</th><th>Authenticated (no profile)</th><th>Authenticated (has profile)</th></tr>
+    <tr><td><code>/app/*</code></td><td>→ /login</td><td>Access allowed</td><td>Access allowed</td></tr>
+    <tr><td><code>/login</code></td><td>Access allowed</td><td>→ /app/log</td><td>→ /app/log</td></tr>
+    <tr><td><code>/onboarding</code></td><td>Access allowed</td><td>→ /app/log</td><td>→ /app/log</td></tr>
+    <tr><td><code>/onboarding/setup</code></td><td>Access allowed</td><td>Access allowed ✅</td><td>Access allowed</td></tr>
+  </table>
+
+  <div class="info-box">
+    <strong>Environment Safety Guard</strong>
+    The middleware includes a guard that skips all Supabase auth checks if the environment variables are still set to placeholder values. This allows the app to render its UI during local development before a Supabase project is connected.
+  </div>
+
+  <h2>Full Authentication Flow Diagram</h2>
+  <div class="flow">
+    <div class="flow-item"><div class="flow-node">/onboarding</div><div class="flow-desc">User fills in name, email, password → clicks "Create Account"</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item"><div class="flow-node">Supabase Auth</div><div class="flow-desc">signUp() called → confirmation email sent to user</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item"><div class="flow-node">"Check inbox" screen</div><div class="flow-desc">App shows waiting screen with email address confirmation</div></div>
+    <div class="flow-arrow">↓ (user clicks email link)</div>
+    <div class="flow-item"><div class="flow-node">/auth/callback</div><div class="flow-desc">exchangeCodeForSession() → session established → profile check</div></div>
+    <div class="flow-arrow">↓ (no profile found)</div>
+    <div class="flow-item"><div class="flow-node">/onboarding/setup</div><div class="flow-desc">Role picker → company name / invite code → INSERT companies + profiles</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item"><div class="flow-node">/app/log</div><div class="flow-desc">Daily Log page — fully authenticated, profile complete ✅</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ PAGE 5 — FILE STRUCTURE ════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-label">Section 05</div>
+  <h1>Codebase Structure</h1>
+  <p>The project uses Next.js 14 App Router with a <code>src/</code> directory layout. Route groups are used to separate auth routes from the main app shell.</p>
+
+  <div class="filetree">
+<span class="dir">recap/app/</span>
+├── <span class="file">.env.local</span>         <span class="comment">← Supabase keys + Gemini API key</span>
+├── <span class="file">.gitignore</span>
+├── <span class="file">package.json</span>       <span class="comment">← next, @supabase/supabase-js, @supabase/ssr</span>
+├── <span class="file">next.config.ts</span>
+├── <span class="file">tsconfig.json</span>
+└── <span class="dir">src/</span>
+    ├── <span class="file">middleware.ts</span>      <span class="comment">← Route protection + auth redirects</span>
+    ├── <span class="dir">lib/supabase/</span>
+    │   ├── <span class="file">server.ts</span>      <span class="comment">← Server-side client (SSR cookies)</span>
+    │   └── <span class="file">client.ts</span>      <span class="comment">← Browser-side client</span>
+    ├── <span class="dir">components/</span>
+    │   ├── <span class="file">Sidebar.tsx</span>    <span class="comment">← Fixed sidebar: nav, user, EN/FR toggle, sign out</span>
+    │   └── <span class="file">DailyLogClient.tsx</span> <span class="comment">← Daily Log interactive UI (full Stitch design)</span>
+    └── <span class="dir">app/</span>
+        ├── <span class="file">layout.tsx</span>     <span class="comment">← Root layout: Manrope+Inter fonts, Material Symbols</span>
+        ├── <span class="file">globals.css</span>    <span class="comment">← Full Stitch design system via Tailwind @theme</span>
+        ├── <span class="file">page.tsx</span>       <span class="comment">← Root redirect (→ /app/log or /login)</span>
+        ├── <span class="dir">login/</span>
+        │   └── <span class="file">page.tsx</span>   <span class="comment">← Email+password login + Google OAuth</span>
+        ├── <span class="dir">onboarding/</span>
+        │   ├── <span class="file">page.tsx</span>   <span class="comment">← Sign-up form + "Check your inbox" screen</span>
+        │   └── <span class="dir">setup/</span>
+        │       └── <span class="file">page.tsx</span> <span class="comment">← Post-confirmation: role picker + workspace</span>
+        ├── <span class="dir">auth/callback/</span>
+        │   └── <span class="file">route.ts</span>   <span class="comment">← OAuth handler: new user → setup, existing → app</span>
+        └── <span class="dir">app/</span>           <span class="comment">← Protected app shell (requires auth)</span>
+            ├── <span class="file">layout.tsx</span> <span class="comment">← Fetches profile server-side, renders Sidebar</span>
+            ├── <span class="dir">log/</span>
+            │   └── <span class="file">page.tsx</span> <span class="comment">← Daily Log (server: fetches logs + profile)</span>
+            ├── <span class="dir">dashboard/page.tsx</span>  <span class="comment">← Stub — Week 5-6</span>
+            ├── <span class="dir">history/page.tsx</span>    <span class="comment">← Stub — Week 5-6</span>
+            ├── <span class="dir">team/page.tsx</span>       <span class="comment">← Stub — Week 5-6</span>
+            ├── <span class="dir">settings/page.tsx</span>   <span class="comment">← Stub</span>
+            └── <span class="dir">help/page.tsx</span>       <span class="comment">← Stub</span>
+  </div>
+
+  <h2>Key Components</h2>
+
+  <h3>Sidebar.tsx</h3>
+  <p>Client component. Renders the fixed 256px sidebar matching the Stitch design exactly. Features:</p>
+  <ul style="margin-left:20px;color:#464553;margin-bottom:16px;">
+    <li style="margin-bottom:4px;">Active nav link detection using <code>usePathname()</code></li>
+    <li style="margin-bottom:4px;">EN/FR language toggle → writes to <code>profiles.language</code> via Supabase</li>
+    <li style="margin-bottom:4px;">User initials avatar derived from <code>full_name</code></li>
+    <li style="margin-bottom:4px;">Sign Out → <code>supabase.auth.signOut()</code> + redirect to /login</li>
+    <li style="margin-bottom:4px;">Mobile bottom navigation (hidden on desktop via <code>md:hidden</code>)</li>
+  </ul>
+
+  <h3>DailyLogClient.tsx</h3>
+  <p>Client component. Implements the full Daily Log interaction. Features:</p>
+  <ul style="margin-left:20px;color:#464553;margin-bottom:16px;">
+    <li style="margin-bottom:4px;">Draft auto-save to <code>localStorage</code> (debounced 1200ms)</li>
+    <li style="margin-bottom:4px;">Draft restoration on page load (survives page refresh)</li>
+    <li style="margin-bottom:4px;">"Process with AI" saves <code>raw_input</code> to <code>daily_logs</code> table (AI response stubbed for Week 3-4)</li>
+    <li style="margin-bottom:4px;">Bilingual placeholder text (EN/FR) based on user's language setting</li>
+    <li style="margin-bottom:4px;">Last 3 Days list with real Supabase data + empty state</li>
+    <li style="margin-bottom:4px;">Blocker badge display on recent log entries</li>
+  </ul>
+
+  <h3>middleware.ts</h3>
+  <p>Runs on every request. Guards <code>/app/*</code> routes requiring authentication. Gracefully bypasses Supabase checks when environment variables are not yet configured (local dev safety).</p>
+</div>
+
+<!-- ════════════════════════════════ PAGE 6 — PROBLEMS & SOLUTIONS ════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-label">Section 06</div>
+  <h1>Problems Encountered &amp; Solutions</h1>
+  <p>Development involved several real-world issues that were identified and resolved during this phase.</p>
+
+  <h2>Issues Resolved</h2>
+
+  <div class="step-box">
+    <div class="step-num">Problem 1</div>
+    <div class="step-title">npm install failures (ECONNRESET)</div>
+    <p>The npm registry connection was repeatedly timing out mid-download. Resolved by retrying with <code>--fetch-timeout=120000</code> which extended the timeout to 2 minutes and allowed the full download to complete.</p>
+  </div>
+
+  <div class="step-box">
+    <div class="step-num">Problem 2</div>
+    <div class="step-title">Next.js scaffold conflicted with existing files</div>
+    <p><code>create-next-app</code> refused to scaffold in the <code>recap/</code> root because the PDF and ZIP files were present. Resolved by scaffolding into a <code>recap/app/</code> subdirectory instead.</p>
+  </div>
+
+  <div class="step-box">
+    <div class="step-num">Problem 3</div>
+    <div class="step-title">Supabase URL validation crash on all pages</div>
+    <p>Before real credentials were added, the Supabase SDK was throwing "Invalid supabaseUrl" on every request because the middleware runs globally. Resolved by adding an <code>isSupabaseConfigured()</code> guard that skips auth checks when env vars are placeholders.</p>
+  </div>
+
+  <div class="step-box">
+    <div class="step-num">Problem 4</div>
+    <div class="step-title">RLS policy blocking company insert</div>
+    <p>The onboarding form was trying to insert into <code>companies</code> immediately after <code>signUp()</code>, but Supabase requires email confirmation before the session is valid. The RLS policy blocked the insert because there was no authenticated context. Resolved by splitting the flow: sign-up just sends the email, database writes happen on a separate <code>/onboarding/setup</code> route that only runs after email confirmation.</p>
+  </div>
+
+  <div class="step-box">
+    <div class="step-num">Problem 5</div>
+    <div class="step-title">Supabase email rate limit during testing</div>
+    <p>Repeated sign-up attempts for the same email address hit Supabase's free-tier email rate limit. Resolved by running a direct SQL update on <code>auth.users</code> to manually confirm the email without sending another email.</p>
+  </div>
+
+  <div class="step-box">
+    <div class="step-num">Problem 6</div>
+    <div class="step-title">Git push to wrong branch (main vs master)</div>
+    <p>Initial push went to <code>main</code> but the GitHub repository's default branch was <code>master</code>. Resolved by renaming the local branch to <code>master</code>, force-pushing to <code>origin/master</code>, and then deleting the stray <code>main</code> branch from GitHub.</p>
+  </div>
+
+  <h2>AI Provider Change</h2>
+  <p>The original PDF plan specified <strong>Claude 3.5 Sonnet (Anthropic)</strong> as the AI engine. After reviewing options, the decision was made to switch to <strong>Gemini API (Google)</strong> for the following reasons:</p>
+  <table>
+    <tr><th></th><th>Claude (original)</th><th>Gemini (chosen)</th></tr>
+    <tr><td>Free tier</td><td>No</td><td>Yes ✅</td></tr>
+    <tr><td>FR/EN quality</td><td>Excellent</td><td>Excellent ✅</td></tr>
+    <tr><td>Recommended model</td><td>claude-3-5-sonnet</td><td>gemini-1.5-flash</td></tr>
+    <tr><td>SDK</td><td>@anthropic-ai/sdk</td><td>@google/generative-ai</td></tr>
+    <tr><td>Env var</td><td>ANTHROPIC_API_KEY</td><td>GEMINI_API_KEY ✅</td></tr>
+  </table>
+</div>
+
+<!-- ════════════════════════════════ PAGE 7 — ROADMAP ════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-label">Section 07</div>
+  <h1>8-Week Roadmap</h1>
+  <p>The full project follows an 8-week MVP roadmap aligned with the internship defense presentation deadline.</p>
+
+  <div class="roadmap-row">
+    <div class="roadmap-week done">Week 1–2</div>
+    <div>
+      <div class="roadmap-title">Foundation <span class="badge badge-done">✅ Complete</span></div>
+      <div class="roadmap-desc">Next.js scaffold · Supabase connection · Email auth · Onboarding flow · Daily Log page · App shell &amp; sidebar · GitHub push</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-week">Week 3–4</div>
+    <div>
+      <div class="roadmap-title">AI Loop <span class="badge badge-next">⏳ Next</span></div>
+      <div class="roadmap-desc">Gemini API integration · POST /api/ai/process-log · Task extraction · Smart follow-up question · AI summary saved to DB · Bilingual (EN/FR) testing</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-week">Week 5–6</div>
+    <div>
+      <div class="roadmap-title">Manager Dashboard <span class="badge badge-soon">🔜 Upcoming</span></div>
+      <div class="roadmap-desc">Team overview (logged/not logged) · AI summary cards · Blocker highlight strip · Team Sentiment score · Seed demo data (5 fake employees)</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-week">Week 7</div>
+    <div>
+      <div class="roadmap-title">Polish <span class="badge badge-soon">🔜 Upcoming</span></div>
+      <div class="roadmap-desc">CSV/PDF export · Micro-animations &amp; loading states · Resend email reminders · "My Weekly Summary" shareable card · Full task history page</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-week">Week 8</div>
+    <div>
+      <div class="roadmap-title">Demo Prep <span class="badge badge-soon">🔜 Upcoming</span></div>
+      <div class="roadmap-desc">Demo story rehearsal · Q&amp;A preparation · Cache demo data · Seed realistic data for presentation · Final Vercel deployment</div>
+    </div>
+  </div>
+
+  <h2>What's Built vs What's Next (AI Processing)</h2>
+  <p>The "Process with AI" button currently saves the raw text to Supabase but does not yet call the Gemini API. In Week 3-4, this will be completed:</p>
+  <pre><code>// Week 3-4: POST /api/ai/process-log
+// 1. Send raw_input to Gemini with parsing prompt
+// 2. Gemini identifies top 2 tasks + asks ONE follow-up question
+// 3. User answers the follow-up in chat UI
+// 4. Gemini generates 2-3 sentence summary (3rd person)
+// 5. If blocker detected: save with "BLOCKER:" prefix
+// 6. Update daily_logs: ai_summary + blocker_note
+// 7. Insert into tasks table
+// 8. Dashboard auto-updates</code></pre>
+
+  <h2>Future Roadmap (Post-MVP)</h2>
+  <table>
+    <tr><th>Version</th><th>Features</th></tr>
+    <tr><td>V2</td><td>GitHub &amp; Calendar integrations, Slack bot notifications</td></tr>
+    <tr><td>V3</td><td>Analytics dashboard, MAD currency pricing for Moroccan market</td></tr>
+    <tr><td>V4</td><td>React Native mobile app</td></tr>
+    <tr><td>V5</td><td>Arabic language support (3rd language after EN/FR)</td></tr>
+  </table>
+</div>
+
+<!-- ════════════════════════════════ FOOTER ════════════════════════════════ -->
+<div class="footer">
+  RECAP — Project Progress Report · April 2026 · Abdellah Bahmani · github.com/Abdellah45/Recap
+</div>
+
+</body>
+</html>

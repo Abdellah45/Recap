@@ -1,0 +1,82 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+const SYSTEM_PROMPT = `You generate daily work summaries for managers.
+
+Given:
+- Employee's raw work description
+- Follow-up question that was asked
+- Employee's answer to that question
+
+Generate a clean 2-3 sentence summary in plain language.
+
+Rules:
+- Write as if briefing a manager who has 10 seconds to read it
+- Use third person: "Sarah completed..." not "I completed..."
+- Always respond in the SAME LANGUAGE as the employee's input
+- If there is a blocker, start the last sentence with "BLOCKER:"
+- Never use bullet points, write in flowing sentences
+- Keep it under 60 words
+
+Return JSON only:
+{
+  "summary": "Clean 2-3 sentence summary here",
+  "has_blocker": true,
+  "blocker_text": "Description if has_blocker is true, else null"
+}`;
+
+export async function POST(request: Request) {
+  try {
+    const { raw_input, followup_question, user_answer, log_id } =
+      await request.json();
+
+    if (!raw_input || !followup_question || !user_answer || !log_id) {
+      return NextResponse.json(
+        { error: "raw_input, followup_question, user_answer, log_id are required" },
+        { status: 400 }
+      );
+    }
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.3,
+      },
+      systemInstruction: SYSTEM_PROMPT,
+    });
+
+    const userMessage = `Work description: ${raw_input}
+
+Follow-up question asked: ${followup_question}
+
+Employee's answer: ${user_answer}`;
+
+    const result = await model.generateContent(userMessage);
+    const text = result.response.text();
+    const parsed = JSON.parse(text);
+
+    // Save summary + blocker back to the log
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("daily_logs")
+      .update({
+        ai_summary: parsed.summary,
+        blocker_note: parsed.has_blocker ? parsed.blocker_text : null,
+      })
+      .eq("id", log_id);
+
+    if (error) throw error;
+
+    return NextResponse.json(parsed);
+  } catch (err) {
+    console.error("AI generate-summary error:", err);
+    return NextResponse.json(
+      { error: "Summary generation failed" },
+      { status: 500 }
+    );
+  }
+}

@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
   // /onboarding/setup is excluded — it's needed by new users right after email confirmation
   const authOnlyRoutes = ["/login", "/onboarding"];
   if (user && authOnlyRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL("/app/log", request.url));
+    return NextResponse.redirect(new URL("/app", request.url));
   }
 
   return supabaseResponse;

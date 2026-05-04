@@ -25,5 +25,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/app/log`);
+  return NextResponse.redirect(`${origin}/app`);
 }

@@ -11,15 +11,32 @@ type RecentLog = {
   blocker_note: string | null;
 };
 
+type AIState =
+  | { stage: "idle" }
+  | { stage: "processing" }
+  | {
+      stage: "followup";
+      log_id: string;
+      tasks: string[];
+      question: string;
+    }
+  | { stage: "answering" }
+  | {
+      stage: "done";
+      summary: string;
+      has_blocker: boolean;
+      blocker_text: string | null;
+    };
+
 const TIPS = [
-  { icon: "bug_report", text: "Include critical bugs fixed or PR reviews." },
-  { icon: "groups", text: "Mention key client or stakeholder meetings." },
-  { icon: "speed", text: "Mention blockers that impacted your velocity." },
-  { icon: "architecture", text: "Reference specific tickets or design docs." },
+  { icon: "bug_report", text: "Mentionnez les bugs critiques résolus ou les PR reviewées." },
+  { icon: "groups", text: "Signalez les réunions importantes avec clients ou équipes." },
+  { icon: "speed", text: "Indiquez les blocages qui ont impacté votre vélocité." },
+  { icon: "architecture", text: "Référencez les tickets spécifiques ou docs de design." },
 ];
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return new Date(dateStr).toLocaleDateString("fr-FR", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -39,13 +56,15 @@ export default function DailyLogClient({
 }) {
   const router = useRouter();
   const supabase = createClient();
+
   const [text, setText] = useState("");
+  const [answer, setAnswer] = useState("");
   const [saving, setSaving] = useState(false);
-  const [processing, setProcessing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [aiState, setAiState] = useState<AIState>({ stage: "idle" });
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const today = new Date().toLocaleDateString("en-US", {
+  const today = new Date().toLocaleDateString("fr-FR", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -57,9 +76,9 @@ export default function DailyLogClient({
     if (draft) setText(draft);
   }, [userId]);
 
-  // Auto-save draft to localStorage
+  // Auto-save draft
   useEffect(() => {
-    if (!text) return;
+    if (!text || aiState.stage !== "idle") return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     setSaving(true);
     saveTimer.current = setTimeout(() => {
@@ -71,39 +90,92 @@ export default function DailyLogClient({
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [text, userId]);
+  }, [text, userId, aiState.stage]);
 
+  // ── Step 1: Save raw log + call Prompt 1 ──
   async function handleProcessWithAI() {
     if (!text.trim()) return;
-    setProcessing(true);
-    try {
-      // Save raw log to Supabase (AI stubbed for now — Week 3-4)
-      const { data: log, error } = await supabase
-        .from("daily_logs")
-        .insert({
-          user_id: userId,
-          raw_input: text,
-          ai_summary: null,
-          blocker_note: null,
-          logged_at: new Date().toISOString().split("T")[0],
-        })
-        .select()
-        .single();
+    setAiState({ stage: "processing" });
 
-      if (error) throw error;
+    // Save raw input to Supabase first
+    const { data: log, error: logError } = await supabase
+      .from("daily_logs")
+      .insert({
+        user_id: userId,
+        raw_input: text,
+        logged_at: new Date().toISOString().split("T")[0],
+      })
+      .select()
+      .single();
 
-      // Clear draft
-      localStorage.removeItem(`recap-draft-${userId}`);
-      setText("");
-
-      console.log("Log saved, AI processing coming in Week 3-4:", log);
-      router.refresh();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setProcessing(false);
+    if (logError || !log) {
+      console.error(logError);
+      setAiState({ stage: "idle" });
+      return;
     }
+
+    // Call Prompt 1
+    const res = await fetch("/api/ai/process-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ raw_input: text }),
+    });
+
+    if (!res.ok) {
+      console.error("process-log failed");
+      setAiState({ stage: "idle" });
+      return;
+    }
+
+    const { tasks_identified, followup_question } = await res.json();
+
+    localStorage.removeItem(`recap-draft-${userId}`);
+    setAiState({
+      stage: "followup",
+      log_id: log.id,
+      tasks: tasks_identified ?? [],
+      question: followup_question,
+    });
   }
+
+  // ── Step 2: Submit answer + call Prompt 2 ──
+  async function handleSubmitAnswer() {
+    if (aiState.stage !== "followup" || !answer.trim()) return;
+    const { log_id, question } = aiState;
+    setAiState({ stage: "answering" });
+
+    const res = await fetch("/api/ai/generate-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        raw_input: text,
+        followup_question: question,
+        user_answer: answer,
+        log_id,
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("generate-summary failed");
+      setAiState({ stage: "idle" });
+      return;
+    }
+
+    const { summary, has_blocker, blocker_text } = await res.json();
+    setAiState({ stage: "done", summary, has_blocker, blocker_text });
+    setText("");
+    setAnswer("");
+    router.refresh();
+  }
+
+  function handleReset() {
+    setAiState({ stage: "idle" });
+    setText("");
+    setAnswer("");
+  }
+
+  const isProcessing =
+    aiState.stage === "processing" || aiState.stage === "answering";
 
   return (
     <div className="w-full max-w-4xl">
@@ -114,9 +186,11 @@ export default function DailyLogClient({
             className="text-4xl md:text-5xl font-extrabold tracking-tighter text-[#131b2e]"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
-            Daily Log
+            Journal Quotidien
           </h2>
-          <p className="text-[#464553] mt-2 text-lg font-medium">{today}</p>
+          <p className="text-[#464553] mt-2 text-lg font-medium capitalize">
+            {today}
+          </p>
         </div>
         <div className="flex items-center gap-2 text-[#006b5f] font-semibold bg-[#6df5e1]/20 px-4 py-2 rounded-full">
           <span
@@ -125,109 +199,269 @@ export default function DailyLogClient({
           >
             bolt
           </span>
-          AI Analysis Ready
+          Analyse IA Prête
         </div>
       </div>
 
       <div className="space-y-8">
-        {/* Main textarea */}
-        <section className="bg-white rounded-xl p-1 shadow-sm">
-          <div className="relative">
-            <label className="sr-only" htmlFor="work-dump">
-              Worklog input
-            </label>
+        {/* ── SCREEN 1 — Text input ── */}
+        {(aiState.stage === "idle" || aiState.stage === "processing") && (
+          <section className="bg-white rounded-xl shadow-sm overflow-hidden">
             <textarea
               id="work-dump"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="w-full p-8 md:p-10 text-xl text-[#131b2e] placeholder:text-[#c8c4d5] border-none focus:outline-none focus:ring-0 bg-transparent resize-none leading-relaxed"
+              disabled={isProcessing}
+              className="w-full p-8 md:p-10 text-xl text-[#131b2e] placeholder:text-[#c8c4d5] border-none focus:outline-none focus:ring-0 bg-transparent resize-none leading-relaxed disabled:opacity-60"
               placeholder={
                 language === "fr"
-                  ? "Sur quoi avez-vous travaillé aujourd'hui ? (Videz simplement ici, l'IA organisera)"
-                  : `Hey ${firstName} 👋 What did you work on today? (Just dump it here, AI will organize it)`
+                  ? `Salut ${firstName} 👋 Sur quoi avez-vous travaillé aujourd'hui ?`
+                  : `Hey ${firstName} 👋 What did you work on today? (Just dump it here)`
               }
               rows={12}
             />
-            <div className="absolute bottom-6 right-6 flex items-center gap-4">
+            <div className="px-8 pb-6 flex items-center justify-between border-t border-[#f2f3ff]">
               <span className="text-xs text-slate-400 font-medium">
-                {saving ? "Saving..." : saved ? "✓ Saved" : "Auto-saving..."}
+                {isProcessing
+                  ? "Analyse en cours..."
+                  : saving
+                  ? "Sauvegarde..."
+                  : saved
+                  ? "✓ Sauvegardé"
+                  : "Auto-sauvegarde"}
               </span>
               <button
                 onClick={handleProcessWithAI}
-                disabled={!text.trim() || processing}
+                disabled={!text.trim() || isProcessing}
                 className="primary-gradient text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-indigo-200 disabled:opacity-40"
               >
-                {processing ? "Processing..." : "Process with AI"}
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  auto_awesome
-                </span>
+                {isProcessing ? (
+                  <>
+                    <span className="animate-spin material-symbols-outlined text-base">
+                      progress_activity
+                    </span>
+                    Analyse en cours...
+                  </>
+                ) : (
+                  <>
+                    Traiter avec l&apos;IA
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      auto_awesome
+                    </span>
+                  </>
+                )}
               </button>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        {/* Bento cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Pro tips */}
-          <div className="md:col-span-2 bg-[#f2f3ff] p-8 rounded-xl relative overflow-hidden group">
-            <div className="relative z-10">
-              <h4 className="text-sm font-bold uppercase tracking-widest text-[#1f108e] mb-4">
-                Pro-Tips
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {TIPS.map(({ icon, text: tip }) => (
-                  <div key={icon} className="flex gap-3">
-                    <span className="material-symbols-outlined text-[#c3c0ff]">
-                      {icon}
-                    </span>
-                    <p className="text-sm text-[#464553]">{tip}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="absolute -right-12 -bottom-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700">
-              <span className="material-symbols-outlined text-[12rem]">
-                lightbulb
-              </span>
-            </div>
-          </div>
-
-          {/* Weekly goal placeholder */}
-          <div className="bg-[#ffdbca] p-8 rounded-xl flex flex-col justify-between">
-            <div>
-              <h4 className="text-sm font-bold uppercase tracking-widest text-[#341100] mb-2">
-                Weekly Goal
-              </h4>
-              <p className="text-[#341100] font-medium">
-                Finish MVP for the demo presentation.
+        {/* ── SCREEN 2 — AI Follow-up question ── */}
+        {(aiState.stage === "followup" || aiState.stage === "answering") && (
+          <section className="bg-white rounded-xl shadow-sm overflow-hidden">
+            {/* Tasks identified */}
+            <div className="px-8 pt-8 pb-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#544fc0] mb-3">
+                Tâches identifiées
               </p>
+              <div className="flex flex-wrap gap-2">
+                {aiState.stage === "followup" &&
+                  aiState.tasks.map((t, i) => (
+                    <span
+                      key={i}
+                      className="bg-[#f2f3ff] text-[#1f108e] text-sm font-medium px-3 py-1 rounded-full"
+                    >
+                      {t}
+                    </span>
+                  ))}
+              </div>
             </div>
-            <div className="mt-6 flex items-center justify-between">
-              <span className="text-2xl font-bold text-[#341100]">40%</span>
-              <div className="w-24 h-1.5 bg-[#341100]/20 rounded-full overflow-hidden">
-                <div className="h-full bg-[#341100] w-[40%]" />
+
+            {/* Follow-up question */}
+            <div className="px-8 py-6 bg-[#f2f3ff] mx-8 rounded-xl mb-6">
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-full primary-gradient flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span
+                    className="material-symbols-outlined text-white text-sm"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    smart_toy
+                  </span>
+                </div>
+                <p className="text-[#131b2e] font-semibold text-base leading-relaxed">
+                  {aiState.stage === "followup" ? aiState.question : "..."}
+                </p>
+              </div>
+            </div>
+
+            {/* Answer input */}
+            <div className="px-8 pb-8">
+              <textarea
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                disabled={aiState.stage === "answering"}
+                placeholder="Votre réponse..."
+                rows={4}
+                className="w-full bg-[#faf8ff] rounded-xl px-5 py-4 text-[#131b2e] placeholder:text-[#c8c4d5] focus:outline-none focus:ring-2 focus:ring-[#544fc0] resize-none text-base leading-relaxed disabled:opacity-60"
+              />
+              <div className="flex justify-between items-center mt-4">
+                <button
+                  onClick={handleReset}
+                  className="text-sm text-[#464553] hover:text-[#1f108e] transition-colors"
+                >
+                  ← Recommencer
+                </button>
+                <button
+                  onClick={handleSubmitAnswer}
+                  disabled={!answer.trim() || aiState.stage === "answering"}
+                  className="primary-gradient text-white px-8 py-3.5 rounded-xl font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-indigo-200 disabled:opacity-40"
+                >
+                  {aiState.stage === "answering" ? (
+                    <>
+                      <span className="animate-spin material-symbols-outlined text-base">
+                        progress_activity
+                      </span>
+                      Génération...
+                    </>
+                  ) : (
+                    <>
+                      Générer le résumé
+                      <span
+                        className="material-symbols-outlined"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        send
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── SCREEN 3 — Done! Summary ── */}
+        {aiState.stage === "done" && (
+          <section className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-[#d4f5e9] flex items-center justify-center">
+                  <span
+                    className="material-symbols-outlined text-[#006b5f]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    check_circle
+                  </span>
+                </div>
+                <div>
+                  <p className="font-bold text-[#131b2e]">
+                    Journal enregistré et résumé généré !
+                  </p>
+                  <p className="text-xs text-[#464553]">
+                    Votre manager peut maintenant voir votre résumé du jour
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-[#faf8ff] rounded-xl p-6 mb-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#544fc0] mb-3">
+                  Résumé IA
+                </p>
+                <p className="text-[#131b2e] leading-relaxed">
+                  {aiState.summary}
+                </p>
+              </div>
+
+              {aiState.has_blocker && aiState.blocker_text && (
+                <div className="bg-[#ffdbca] rounded-xl p-4 flex gap-3 items-start mb-4">
+                  <span
+                    className="material-symbols-outlined text-[#783200]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    warning
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-[#783200] uppercase tracking-wider mb-1">
+                      Blocage détecté
+                    </p>
+                    <p className="text-sm text-[#341100]">
+                      {aiState.blocker_text}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={handleReset}
+                className="w-full mt-2 border-2 border-[#eaedff] text-[#1f108e] font-bold py-3 rounded-xl hover:bg-[#f2f3ff] transition-colors"
+              >
+                Ajouter un autre journal
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* Bento cards — shown only on idle */}
+        {aiState.stage === "idle" && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 bg-[#f2f3ff] p-8 rounded-xl relative overflow-hidden group">
+              <div className="relative z-10">
+                <h4 className="text-sm font-bold uppercase tracking-widest text-[#1f108e] mb-4">
+                  Conseils
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {TIPS.map(({ icon, text: tip }) => (
+                    <div key={icon} className="flex gap-3">
+                      <span className="material-symbols-outlined text-[#c3c0ff]">
+                        {icon}
+                      </span>
+                      <p className="text-sm text-[#464553]">{tip}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="absolute -right-12 -bottom-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700">
+                <span className="material-symbols-outlined text-[12rem]">
+                  lightbulb
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-[#ffdbca] p-8 rounded-xl flex flex-col justify-between">
+              <div>
+                <h4 className="text-sm font-bold uppercase tracking-widest text-[#341100] mb-2">
+                  Objectif
+                </h4>
+                <p className="text-[#341100] font-medium">
+                  Finir le MVP pour la présentation de démonstration.
+                </p>
+              </div>
+              <div className="mt-6 flex items-center justify-between">
+                <span className="text-2xl font-bold text-[#341100]">60%</span>
+                <div className="w-24 h-1.5 bg-[#341100]/20 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#341100] w-[60%]" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Recent logs */}
-        <div className="pt-4">
+        <div className="pt-2">
           <div className="flex items-center justify-between mb-6">
             <h3
               className="text-xl font-bold"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
-              Last 3 Days
+              3 Derniers Jours
             </h3>
             <a
               href="/app/history"
               className="text-sm font-bold text-[#1f108e] flex items-center gap-1 hover:underline"
             >
-              View Full History
+              Voir l&apos;historique complet
               <span className="material-symbols-outlined text-sm">
                 arrow_forward
               </span>
@@ -235,18 +469,20 @@ export default function DailyLogClient({
           </div>
 
           {recentLogs.length === 0 ? (
-            <div className="tonal-nesting p-8 rounded-xl text-center text-[#464553]">
+            <div className="bg-[#f2f3ff] p-8 rounded-xl text-center text-[#464553]">
               <span className="material-symbols-outlined text-3xl text-[#c8c4d5] block mb-2">
                 edit_note
               </span>
-              <p className="text-sm">No logs yet. Write your first one above!</p>
+              <p className="text-sm">
+                Pas encore de journaux. Écrivez le vôtre ci-dessus !
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
               {recentLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="tonal-nesting p-6 rounded-xl flex items-center justify-between hover:bg-[#e2e7ff] transition-colors cursor-pointer"
+                  className="bg-[#f2f3ff] p-6 rounded-xl flex items-center justify-between hover:bg-[#e2e7ff] transition-colors cursor-pointer"
                 >
                   <div className="flex gap-4 items-center">
                     <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-[#1f108e] shadow-sm">
@@ -258,14 +494,16 @@ export default function DailyLogClient({
                       </span>
                     </div>
                     <div>
-                      <p className="font-bold">{formatDate(log.logged_at)}</p>
+                      <p className="font-bold capitalize">
+                        {formatDate(log.logged_at)}
+                      </p>
                       <p className="text-sm text-[#464553]">
                         {log.ai_summary
-                          ? log.ai_summary.slice(0, 60) + "..."
-                          : "Raw log saved — AI summary coming soon"}
+                          ? log.ai_summary.slice(0, 70) + "..."
+                          : "Texte brut sauvegardé — résumé IA généré"}
                         {log.blocker_note && (
                           <span className="ml-2 inline-block bg-[#ffdbca] text-[#783200] text-xs px-2 py-0.5 rounded-full font-semibold">
-                            Blocker
+                            Blocage
                           </span>
                         )}
                       </p>
