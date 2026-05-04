@@ -30,9 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — .env.local is included intentionally
+# env files — never commit secrets
 .env
-.env.production
+.env.*
 
 # vercel
 .vercel
