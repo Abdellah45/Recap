@@ -1,11 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// gemini-2.0-flash-lite: lightest model, most generous free quota
-const MODEL = "gemini-2.0-flash-lite";
 const SYSTEM_PROMPT = `You generate daily work summaries for managers.
 
 Given:
@@ -42,24 +40,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.3,
-      },
-      systemInstruction: SYSTEM_PROMPT,
-    });
-
     const userMessage = `Work description: ${raw_input}
 
 Follow-up question asked: ${followup_question}
 
 Employee's answer: ${user_answer}`;
 
-    const result = await model.generateContent(userMessage);
-    const text = result.response.text();
-    const parsed = JSON.parse(text);
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-lite",
+      contents: userMessage,
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        responseMimeType: "application/json",
+        temperature: 0.3,
+      },
+    });
+
+    const parsed = JSON.parse(response.text ?? "{}");
 
     // Save summary + blocker back to the log
     const supabase = await createClient();
