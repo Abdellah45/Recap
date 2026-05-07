@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+// gemini-2.0-flash-lite: lightest model, most generous free quota
+const MODEL = "gemini-2.0-flash-lite";
 const SYSTEM_PROMPT = `You generate daily work summaries for managers.
 
 Given:
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
     }
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: MODEL,
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.3,

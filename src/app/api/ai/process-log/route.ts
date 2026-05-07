@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+// gemini-2.0-flash-lite: lightest model, most generous free quota
+const MODEL = "gemini-2.0-flash-lite";
 const SYSTEM_PROMPT = `You are a work assistant that helps employees log their daily work.
 Your job is to:
 1. Read the employee's free-text work description
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: MODEL,
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.4,
