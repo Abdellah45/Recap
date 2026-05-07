@@ -21,7 +21,11 @@ export default async function AppLayout({
     .eq("id", user.id)
     .single();
 
-  const initials = (profile?.full_name ?? user.email ?? "?")
+  if (!profile) {
+    redirect("/onboarding/setup");
+  }
+
+  const initials = (profile.full_name ?? user.email ?? "?")
     .split(" ")
     .map((w: string) => w[0])
     .join("")

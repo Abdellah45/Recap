@@ -405,45 +405,26 @@ export default function DailyLogClient({
 
         {/* Bento cards — shown only on idle */}
         {aiState.stage === "idle" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 bg-[#f2f3ff] p-8 rounded-xl relative overflow-hidden group">
-              <div className="relative z-10">
-                <h4 className="text-sm font-bold uppercase tracking-widest text-[#1f108e] mb-4">
-                  Conseils
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {TIPS.map(({ icon, text: tip }) => (
-                    <div key={icon} className="flex gap-3">
-                      <span className="material-symbols-outlined text-[#c3c0ff]">
-                        {icon}
-                      </span>
-                      <p className="text-sm text-[#464553]">{tip}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="absolute -right-12 -bottom-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700">
-                <span className="material-symbols-outlined text-[12rem]">
-                  lightbulb
-                </span>
+          <div className="bg-[#f2f3ff] p-8 rounded-xl relative overflow-hidden group">
+            <div className="relative z-10">
+              <h4 className="text-sm font-bold uppercase tracking-widest text-[#1f108e] mb-4">
+                Conseils
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {TIPS.map(({ icon, text: tip }) => (
+                  <div key={icon} className="flex flex-col gap-2 bg-white/50 p-4 rounded-xl border border-white">
+                    <span className="material-symbols-outlined text-[#1f108e]">
+                      {icon}
+                    </span>
+                    <p className="text-sm text-[#464553] font-medium leading-relaxed">{tip}</p>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <div className="bg-[#ffdbca] p-8 rounded-xl flex flex-col justify-between">
-              <div>
-                <h4 className="text-sm font-bold uppercase tracking-widest text-[#341100] mb-2">
-                  Objectif
-                </h4>
-                <p className="text-[#341100] font-medium">
-                  Finir le MVP pour la présentation de démonstration.
-                </p>
-              </div>
-              <div className="mt-6 flex items-center justify-between">
-                <span className="text-2xl font-bold text-[#341100]">60%</span>
-                <div className="w-24 h-1.5 bg-[#341100]/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#341100] w-[60%]" />
-                </div>
-              </div>
+            <div className="absolute -right-12 -bottom-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700 pointer-events-none">
+              <span className="material-symbols-outlined text-[16rem]">
+                lightbulb
+              </span>
             </div>
           </div>
         )}

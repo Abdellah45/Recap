@@ -18,7 +18,11 @@ export default async function AppIndexPage() {
     .eq("id", user.id)
     .single();
 
-  if (profile?.role === "manager") {
+  if (!profile) {
+    redirect("/onboarding/setup");
+  }
+
+  if (profile.role === "manager") {
     redirect("/app/dashboard");
   } else {
     redirect("/app/log");
