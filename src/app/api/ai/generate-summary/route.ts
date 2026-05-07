@@ -47,7 +47,7 @@ Follow-up question asked: ${followup_question}
 Employee's answer: ${user_answer}`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-lite",
+      model: "gemini-2.5-flash",
       contents: userMessage,
       config: {
         systemInstruction: SYSTEM_PROMPT,

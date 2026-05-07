@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-lite",
+      model: "gemini-2.5-flash",
       contents: raw_input,
       config: {
         systemInstruction: SYSTEM_PROMPT,
