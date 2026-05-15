@@ -14,10 +14,27 @@ Given the employee's work description and their follow-up answer, return a JSON 
 
 2. "tasks_completed": Array of short strings. Each item is a specific deliverable or action completed. Max 4 items. Each item max 8 words. Be specific — not "worked on backend" but "Fixed JWT token expiry bug". If nothing was completed, return [].
 
-3. "mood_signal": One of exactly three values:
-   - "on_track": Work is progressing normally, no issues
-   - "at_risk": Something might slow them down, but not fully blocked
-   - "blocked": They cannot continue without help from someone else
+3. "mood_signal": One of exactly three values based on CONCRETE SIGNALS only:
+
+   - "blocked": Use this ONLY when the employee explicitly:
+     • Says they are waiting for someone else (e.g. "waiting for X to approve", "waiting for access")
+     • Cannot do the next step without external action (e.g. "can't proceed until Y is fixed", "need credentials from IT")
+     • Has a hard dependency on another person or team that is unresolved
+     • Uses words like: "blocked", "stuck", "waiting on", "can't continue", "need someone to"
+
+   - "at_risk": Use this when the employee:
+     • Expresses uncertainty or confusion ("not sure how to", "struggling with", "trying to figure out")
+     • Describes a task taking significantly longer than it should ("still working on", "couldn't finish yet")
+     • Mentions a problem or bug they're investigating but haven't solved
+     • Describes repeated failed attempts at the same thing
+     • Uses hedging language: "I think", "maybe", "not sure if", "having trouble"
+     • The work is progressing but there are warning signs
+
+   - "on_track": Use this when:
+     • The employee clearly describes what they completed with confidence
+     • They state clear next steps for tomorrow
+     • No uncertainty, waiting, or problems mentioned
+     • Tone is confident and forward-moving
 
 4. "has_blocker": boolean — true only if mood_signal is "blocked"
 
