@@ -65,7 +65,7 @@ export default function OnboardingSetupPage() {
       const { data: company, error: cErr } = await supabase
         .from("companies")
         .select("id")
-        .eq("manager_invite_code", code.toUpperCase().trim())
+        .ilike("manager_invite_code", code.trim())
         .single();
 
       if (cErr || !company) { setError("Invalid manager code. Ask the company owner."); setLoading(false); return; }
@@ -83,7 +83,7 @@ export default function OnboardingSetupPage() {
     const { data: team, error: tErr } = await supabase
       .from("teams")
       .select("id, company_id")
-      .eq("invite_code", code.toUpperCase().trim())
+      .ilike("invite_code", code.trim())
       .single();
 
     if (tErr || !team) { setError("Invalid team code. Ask your manager."); setLoading(false); return; }
