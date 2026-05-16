@@ -21,6 +21,11 @@ export default function OnboardingSetupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!path) return;
@@ -209,6 +214,17 @@ export default function OnboardingSetupPage() {
             </>
           )}
         </div>
+
+        {/* Escape hatch — user can always sign out */}
+        <p className="text-center mt-6 text-xs text-[#9896b0]">
+          Wrong account?{" "}
+          <button
+            onClick={handleSignOut}
+            className="text-[#1f108e] font-bold hover:underline"
+          >
+            Sign out
+          </button>
+        </p>
       </div>
     </div>
   );
