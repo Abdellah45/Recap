@@ -52,7 +52,7 @@ export default function Sidebar({
   }
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    await fetch("/api/auth/signout", { method: "POST" });
     router.push("/login");
     router.refresh();
   }

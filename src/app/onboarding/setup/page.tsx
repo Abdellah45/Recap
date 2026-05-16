@@ -22,8 +22,9 @@ export default function OnboardingSetupPage() {
   const [error, setError] = useState<string | null>(null);
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    await fetch("/api/auth/signout", { method: "POST" });
     router.push("/login");
+    router.refresh();
   }
 
   async function handleSubmit(e: React.FormEvent) {

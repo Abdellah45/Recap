@@ -24,8 +24,9 @@ export default function PendingPage() {
   }
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await fetch("/api/auth/signout", { method: "POST" });
     router.push("/login");
+    router.refresh();
   }
 
   return (
