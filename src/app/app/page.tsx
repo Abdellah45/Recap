@@ -22,9 +22,10 @@ export default async function AppIndexPage() {
     redirect("/onboarding/setup");
   }
 
-  if (profile.role === "manager") {
-    redirect("/app/dashboard");
-  } else {
+  // All roles with dashboard access go there; employees go to log
+  if (profile.role === "employee") {
     redirect("/app/log");
+  } else {
+    redirect("/app/dashboard");
   }
 }

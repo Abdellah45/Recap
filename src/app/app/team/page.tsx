@@ -1,10 +1,54 @@
-export default function TeamPage() {
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import TeamManagementClient from "@/components/TeamManagementClient";
+
+export default async function TeamPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, company_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role === "employee") redirect("/app/log");
+  if (profile.role === "manager") redirect("/app/dashboard");
+
+  const companyId = profile.company_id!;
+
+  // Fetch company info
+  const { data: company } = await supabase
+    .from("companies")
+    .select("name, employee_invite_code, manager_invite_code")
+    .eq("id", companyId)
+    .single();
+
+  // Fetch all teams in this company
+  const { data: teams } = await supabase
+    .from("teams")
+    .select("id, name, created_at")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: true });
+
+  // Fetch all profiles in this company
+  const { data: allProfiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, role, status, team_id")
+    .eq("company_id", companyId)
+    .neq("id", user.id); // exclude owner themselves
+
+  const pendingUsers = (allProfiles ?? []).filter((p) => p.status === "pending");
+  const activeUsers = (allProfiles ?? []).filter((p) => p.status === "active");
+
   return (
-    <div className="w-full max-w-4xl">
-      <h2 className="text-4xl font-extrabold tracking-tighter text-[#131b2e]" style={{ fontFamily: "Manrope, sans-serif" }}>
-        Team
-      </h2>
-      <p className="text-[#464553] mt-2">Team overview — coming in Week 5-6.</p>
-    </div>
+    <TeamManagementClient
+      companyId={companyId}
+      company={{ name: company?.name ?? "", employeeCode: company?.employee_invite_code ?? "", managerCode: company?.manager_invite_code ?? "" }}
+      teams={teams ?? []}
+      pendingUsers={pendingUsers}
+      activeUsers={activeUsers}
+    />
   );
 }

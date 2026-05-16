@@ -21,7 +21,7 @@ export default async function AppLayout({
     .eq("id", user.id)
     .single();
 
-  if (!profile) {
+  if (!profile || profile.status === "pending") {
     redirect("/onboarding/setup");
   }
 

@@ -4,7 +4,6 @@ import { NextResponse, type NextRequest } from "next/server";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-/** Returns true if Supabase is properly configured */
 function isSupabaseConfigured() {
   return (
     SUPABASE_URL.startsWith("http") &&
@@ -14,50 +13,50 @@ function isSupabaseConfigured() {
 }
 
 export async function middleware(request: NextRequest) {
-  // If Supabase is not yet configured, let all requests through
-  if (!isSupabaseConfigured()) {
-    return NextResponse.next({ request });
-  }
+  if (!isSupabaseConfigured()) return NextResponse.next({ request });
 
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
+  const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookies: {
+      getAll() { return request.cookies.getAll(); },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        supabaseResponse = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        );
       },
-    }
-  );
+    },
+  });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
 
-  // If user is not logged in and trying to access app routes → redirect to login
+  // Not logged in → redirect to login for app routes
   if (!user && pathname.startsWith("/app")) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If user is already logged in and visiting login/onboarding → redirect to app
-  // /onboarding/setup is excluded — it's needed by new users right after email confirmation
-  const authOnlyRoutes = ["/login", "/onboarding"];
-  if (user && authOnlyRoutes.includes(pathname)) {
+  // Logged in users on auth pages → redirect to app
+  if (user && ["/login", "/onboarding"].includes(pathname)) {
     return NextResponse.redirect(new URL("/app", request.url));
+  }
+
+  // Check profile status for logged-in users accessing app routes
+  if (user && pathname.startsWith("/app")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("status")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile) {
+      return NextResponse.redirect(new URL("/onboarding/setup", request.url));
+    }
+    if (profile.status === "pending") {
+      return NextResponse.redirect(new URL("/pending", request.url));
+    }
   }
 
   return supabaseResponse;

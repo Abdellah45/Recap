@@ -1,47 +1,58 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import DashboardClient, { type EmployeeRow } from "@/components/DashboardClient";
-import AnalyticsSection, {
-  type DailyTeamStat,
-  type EmployeeHistoryRow,
-} from "@/components/AnalyticsSection";
+import AnalyticsSection, { type DailyTeamStat, type EmployeeHistoryRow } from "@/components/AnalyticsSection";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Fetch manager profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("company_id, full_name, role")
+    .select("company_id, full_name, role, team_id")
     .eq("id", user.id)
     .single();
 
   if (!profile?.company_id) redirect("/onboarding/setup");
   if (profile.role === "employee") redirect("/app/log");
 
-  // Fetch company
   const { data: company } = await supabase
     .from("companies")
-    .select("name, invite_code")
+    .select("name, employee_invite_code, manager_invite_code")
     .eq("id", profile.company_id)
     .single();
 
-  // Fetch all employees in this company
-  const { data: teamMembers } = await supabase
-    .from("profiles")
-    .select("id, full_name")
-    .eq("company_id", profile.company_id)
-    .eq("role", "employee");
+  const isOwner = profile.role === "owner";
 
+  // ── Fetch employees based on role ───────────────────────────────────────────
+  let employeesQuery = supabase
+    .from("profiles")
+    .select("id, full_name, team_id")
+    .eq("company_id", profile.company_id)
+    .eq("role", "employee")
+    .eq("status", "active");
+
+  // Manager only sees their team
+  if (!isOwner && profile.team_id) {
+    employeesQuery = employeesQuery.eq("team_id", profile.team_id);
+  } else if (!isOwner && !profile.team_id) {
+    // Manager without a team assigned
+    return (
+      <div className="w-full max-w-xl flex flex-col items-center justify-center text-center py-20">
+        <span className="material-symbols-outlined text-5xl text-[#c8c4d5] mb-4">group_off</span>
+        <h2 className="text-2xl font-bold text-[#131b2e] mb-2">No team assigned yet</h2>
+        <p className="text-[#464553]">The company owner needs to assign you to a team before you can view your dashboard.</p>
+      </div>
+    );
+  }
+
+  const { data: teamMembers } = await employeesQuery;
   const employees = teamMembers ?? [];
   const employeeIds = employees.map((e) => e.id);
 
-  // ── Today's logs ────────────────────────────────────────────────────────────
+  // ── Today's logs ─────────────────────────────────────────────────────────────
   const todayStr = new Date().toISOString().split("T")[0];
   let todayLogs: any[] = [];
   if (employeeIds.length > 0) {
@@ -68,70 +79,80 @@ export default async function DashboardPage() {
     };
   });
 
-  // ── 28-day historical logs ───────────────────────────────────────────────────
-  // Build the 28-day date array (oldest → newest)
+  // ── 28-day historical ──────────────────────────────────────────────────────
   const dates: string[] = [];
   for (let i = 27; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+    const d = new Date(); d.setDate(d.getDate() - i);
     dates.push(d.toISOString().split("T")[0]);
   }
-  const startStr = dates[0];
 
   let historicalLogs: any[] = [];
   if (employeeIds.length > 0) {
     const { data } = await supabase
       .from("daily_logs")
       .select("user_id, logged_at, mood_signal, blocker_note")
-      .gte("logged_at", startStr)
+      .gte("logged_at", dates[0])
       .lte("logged_at", todayStr)
-      .in("user_id", employeeIds)
-      .order("logged_at", { ascending: true });
+      .in("user_id", employeeIds);
     historicalLogs = data ?? [];
   }
 
-  // Team daily stats (for the bar chart)
   const teamDaily: DailyTeamStat[] = dates.map((date) => {
     const dayLogs = historicalLogs.filter((l) => l.logged_at === date);
+    return { date, logged: dayLogs.length, total: employees.length, hasBlocker: dayLogs.some((l) => l.blocker_note) };
+  });
+
+  const employeeHistory: EmployeeHistoryRow[] = employees.map((emp) => {
+    const empLogs = historicalLogs.filter((l) => l.user_id === emp.id);
     return {
-      date,
-      logged: dayLogs.length,
-      total: employees.length,
-      hasBlocker: dayLogs.some((l) => l.blocker_note),
+      id: emp.id,
+      name: emp.full_name as string,
+      dailyData: dates.map((date) => {
+        const log = empLogs.find((l) => l.logged_at === date);
+        return { date, logged: !!log, mood: log?.mood_signal ?? null, hasBlocker: !!log?.blocker_note };
+      }),
     };
   });
 
-  // Per-employee 28-day history (for rankings + trends)
-  const employeeHistory: EmployeeHistoryRow[] = employees.map((emp) => {
-    const empLogs = historicalLogs.filter((l) => l.user_id === emp.id);
-    const dailyData = dates.map((date) => {
-      const log = empLogs.find((l) => l.logged_at === date);
-      return {
-        date,
-        logged: !!log,
-        mood: (log?.mood_signal ?? null) as "on_track" | "at_risk" | "blocked" | null,
-        hasBlocker: !!log?.blocker_note,
-      };
-    });
-    return { id: emp.id, name: emp.full_name as string, dailyData };
-  });
+  // ── Owner pending count ────────────────────────────────────────────────────
+  let pendingCount = 0;
+  if (isOwner) {
+    const { count } = await supabase
+      .from("profiles")
+      .select("id", { count: "exact" })
+      .eq("company_id", profile.company_id)
+      .eq("status", "pending");
+    pendingCount = count ?? 0;
+  }
 
-  const companyInfo = { name: company?.name ?? "", invite_code: company?.invite_code ?? "" };
+  const companyInfo = {
+    name: company?.name ?? "",
+    invite_code: company?.employee_invite_code ?? "",
+  };
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Analytics section (28-day historical view) */}
+      {/* Owner-only: pending badge */}
+      {isOwner && pendingCount > 0 && (
+        <div className="w-full max-w-6xl mb-6">
+          <Link href="/app/team" className="flex items-center gap-3 bg-[#fff5f0] border border-[#ffc4a8] rounded-2xl p-4 hover:shadow-md transition-shadow">
+            <div className="w-8 h-8 rounded-lg bg-[#ff4d00] flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>person_alert</span>
+            </div>
+            <div className="flex-1">
+              <p className="font-black text-[#341100] text-sm">
+                {pendingCount} member{pendingCount > 1 ? "s" : ""} waiting for approval
+              </p>
+              <p className="text-xs text-[#7c3300]">Click to review in Team Management</p>
+            </div>
+            <span className="material-symbols-outlined text-[#ff4d00]">chevron_right</span>
+          </Link>
+        </div>
+      )}
+
       <AnalyticsSection teamDaily={teamDaily} employeeHistory={employeeHistory} />
-
-      {/* Divider */}
       <div className="w-full max-w-6xl border-t border-[#eaedff] mb-10" />
-
-      {/* Today's live dashboard */}
-      <DashboardClient
-        employees={dashboardData}
-        company={companyInfo}
-        managerName={profile.full_name ?? "Manager"}
-      />
+      <DashboardClient employees={dashboardData} company={companyInfo} managerName={profile.full_name ?? ""} />
     </div>
   );
 }

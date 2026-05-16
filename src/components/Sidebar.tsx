@@ -5,11 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const navLinks = [
+const employeeLinks = [
   { href: "/app/log", label: "Daily Log", icon: "edit_note" },
-  { href: "/app/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/app/history", label: "My History", icon: "history" },
-  { href: "/app/team", label: "Team", icon: "group" },
+  { href: "/app/settings", label: "Settings", icon: "settings" },
+];
+
+const managerLinks = [
+  { href: "/app/dashboard", label: "Dashboard", icon: "dashboard" },
+  { href: "/app/settings", label: "Settings", icon: "settings" },
+];
+
+const ownerLinks = [
+  { href: "/app/dashboard", label: "Dashboard", icon: "dashboard" },
+  { href: "/app/team", label: "Team Management", icon: "group" },
   { href: "/app/settings", label: "Settings", icon: "settings" },
 ];
 
@@ -64,7 +73,7 @@ export default function Sidebar({
 
         {/* Nav links */}
         <nav className="flex flex-col gap-1 flex-grow">
-          {navLinks.map(({ href, label, icon }) => {
+          {(role === "owner" ? ownerLinks : role === "manager" ? managerLinks : employeeLinks).map(({ href, label, icon }) => {
             const isActive = pathname === href;
             return (
               <Link
@@ -132,12 +141,7 @@ export default function Sidebar({
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full glass-nav px-6 py-4 flex justify-between items-center z-50 border-t border-indigo-100">
-        {[
-          { href: "/app/log", icon: "edit_note", label: "Log" },
-          { href: "/app/dashboard", icon: "dashboard", label: "Dash" },
-          { href: "/app/history", icon: "history", label: "History" },
-          { href: "/app/settings", icon: "person", label: "Profile" },
-        ].map(({ href, icon, label }) => {
+        {(role === "owner" ? ownerLinks : role === "manager" ? managerLinks : employeeLinks).map(({ href, icon, label }) => {
           const isActive = pathname === href;
           return (
             <Link
