@@ -4,14 +4,11 @@ import DailyLogClient from "@/components/DailyLogClient";
 
 export default async function DailyLogPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // Fetch profile for greeting name and role protection
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, language, role")
+    .select("full_name, language, role, team_id, company_id")
     .eq("id", user!.id)
     .single();
 
@@ -19,7 +16,28 @@ export default async function DailyLogPage() {
     redirect("/app/dashboard");
   }
 
-  // Fetch last 3 log entries for this user
+  // Fetch team info
+  let teamName: string | null = null;
+  let managerName: string | null = null;
+
+  if (profile?.team_id) {
+    const { data: team } = await supabase
+      .from("teams")
+      .select("name")
+      .eq("id", profile.team_id)
+      .single();
+    teamName = team?.name ?? null;
+
+    const { data: manager } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("team_id", profile.team_id)
+      .eq("role", "manager")
+      .eq("status", "active")
+      .single();
+    managerName = manager?.full_name ?? null;
+  }
+
   const { data: recentLogs } = await supabase
     .from("daily_logs")
     .select("id, logged_at, ai_summary, blocker_note")
@@ -35,6 +53,8 @@ export default async function DailyLogPage() {
       userId={user!.id}
       recentLogs={recentLogs ?? []}
       language={profile?.language ?? "en"}
+      teamName={teamName}
+      managerName={managerName}
     />
   );
 }
