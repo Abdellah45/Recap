@@ -199,7 +199,7 @@ export default function OnboardingSetupPage() {
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       placeholder="ABC123"
-                      className="w-full bg-[#f2f3ff] rounded-lg px-4 py-3 text-sm font-mono tracking-widest outline-none focus:ring-2 focus:ring-[#544fc0] focus:ring-offset-2 transition uppercase"
+                      className="w-full bg-[#f2f3ff] rounded-lg px-4 py-3 text-sm font-mono tracking-widest outline-none focus:ring-2 focus:ring-[#544fc0] focus:ring-offset-2 transition"
                     />
                   </div>
                 )}
