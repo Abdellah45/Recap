@@ -335,7 +335,7 @@ export default function DashboardClient({
             <span className="material-symbols-outlined text-5xl text-[#c8c4d5]">group_add</span>
             <p className="font-bold text-[#131b2e] text-lg mt-3">Your team is empty</p>
             <p className="text-[#464553] text-sm mt-1">
-              Share the invite code <span className="font-mono font-bold text-[#1f108e]">{company.invite_code}</span> with your employees.
+              Share the invite code <span className="font-mono font-bold text-[#1f108e]">{team.invite_code}</span> with your employees.
             </p>
           </div>
         ) : filtered.length === 0 ? (
