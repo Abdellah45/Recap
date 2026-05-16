@@ -13,12 +13,15 @@ const employeeLinks = [
 
 const managerLinks = [
   { href: "/app/dashboard", label: "Dashboard", icon: "dashboard" },
+  { href: "/app/my-team", label: "My Team", icon: "group" },
+  { href: "/app/analytics", label: "Analytics", icon: "analytics" },
   { href: "/app/settings", label: "Settings", icon: "settings" },
 ];
 
 const ownerLinks = [
   { href: "/app/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/app/team", label: "Team Management", icon: "group" },
+  { href: "/app/analytics", label: "Analytics", icon: "analytics" },
   { href: "/app/settings", label: "Settings", icon: "settings" },
 ];
 

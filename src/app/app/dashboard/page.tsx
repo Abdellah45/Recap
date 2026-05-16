@@ -225,23 +225,8 @@ export default async function DashboardPage() {
     };
   });
 
-  let historicalLogs: any[] = [];
-  if (employeeIds.length > 0) {
-    const { data } = await supabase
-      .from("daily_logs")
-      .select("user_id, logged_at, mood_signal, blocker_note")
-      .gte("logged_at", dates[0])
-      .lte("logged_at", todayStr)
-      .in("user_id", employeeIds);
-    historicalLogs = data ?? [];
-  }
-
-  const { teamDaily, employeeHistory } = buildAnalyticsData(employees, historicalLogs, dates);
-
   return (
     <div className="w-full flex flex-col items-center">
-      <AnalyticsSection teamDaily={teamDaily} employeeHistory={employeeHistory} />
-      <div className="w-full max-w-6xl border-t border-[#eaedff] mb-10" />
       <DashboardClient
         employees={dashboardData}
         company={{
