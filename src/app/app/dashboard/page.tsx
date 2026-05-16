@@ -164,13 +164,18 @@ export default async function DashboardPage() {
   // MANAGER VIEW
   // ════════════════════════════════════════════════════════════════════════════
 
-  // Manager without team assigned
+  // Manager without team assigned — show invite code + waiting state
   if (!profile.team_id) {
     return (
       <div className="w-full max-w-xl flex flex-col items-center justify-center text-center py-24">
         <span className="material-symbols-outlined text-5xl text-[#c8c4d5] mb-4">group_off</span>
         <h2 className="text-2xl font-bold text-[#131b2e] mb-2">No team assigned yet</h2>
-        <p className="text-[#464553]">The company owner needs to assign you to a team. Check back soon!</p>
+        <p className="text-[#464553] mb-6">The company owner needs to assign you to a team. Check back soon!</p>
+        <div className="bg-[#f2f3ff] rounded-2xl p-5 border border-[#dde0ff] text-left w-full">
+          <p className="text-[9px] font-bold text-[#464553] uppercase tracking-widest mb-2">Employee Invite Code</p>
+          <p className="font-mono tracking-[0.3em] font-black text-xl text-[#1f108e]">{company?.employee_invite_code}</p>
+          <p className="text-xs text-[#9896b0] mt-1">Share this with employees so they can request to join</p>
+        </div>
       </div>
     );
   }
@@ -183,6 +188,14 @@ export default async function DashboardPage() {
     .eq("team_id", profile.team_id)
     .eq("role", "employee")
     .eq("status", "active");
+
+  // Fetch pending employees in this company (managers can approve them)
+  const { data: pendingEmployees } = await supabase
+    .from("profiles")
+    .select("id, full_name, role")
+    .eq("company_id", profile.company_id)
+    .eq("role", "employee")
+    .eq("status", "pending");
 
   const employees = teamMembers ?? [];
   const employeeIds = employees.map((e) => e.id);
@@ -231,8 +244,12 @@ export default async function DashboardPage() {
       <div className="w-full max-w-6xl border-t border-[#eaedff] mb-10" />
       <DashboardClient
         employees={dashboardData}
-        company={{ name: company?.name ?? "", invite_code: "" }}
+        company={{
+          name: company?.name ?? "",
+          invite_code: company?.employee_invite_code ?? "",
+        }}
         managerName={profile.full_name ?? ""}
+        pendingEmployees={(pendingEmployees ?? []).map((p) => ({ id: p.id, name: p.full_name as string }))}
       />
     </div>
   );

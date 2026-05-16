@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type MoodSignal = "on_track" | "at_risk" | "blocked";
 type FilterType = "all" | "logged" | "pending" | "at_risk" | "blocked";
@@ -53,14 +54,33 @@ export default function DashboardClient({
   employees,
   company,
   managerName,
+  pendingEmployees = [],
 }: {
   employees: EmployeeRow[];
   company: CompanyInfo;
   managerName: string;
+  pendingEmployees?: Array<{ id: string; name: string }>;
 }) {
+  const supabase = createClient();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [selected, setSelected] = useState<EmployeeRow | null>(null);
   const [rawExpanded, setRawExpanded] = useState(false);
+  const [pending, setPending] = useState(pendingEmployees);
+  const [loadingApproval, setLoadingApproval] = useState<string | null>(null);
+
+  async function approveEmployee(id: string) {
+    setLoadingApproval(id);
+    await supabase.from("profiles").update({ status: "active" }).eq("id", id);
+    setPending((p) => p.filter((u) => u.id !== id));
+    setLoadingApproval(null);
+  }
+
+  async function rejectEmployee(id: string) {
+    setLoadingApproval(id);
+    await supabase.from("profiles").update({ status: "rejected" }).eq("id", id);
+    setPending((p) => p.filter((u) => u.id !== id));
+    setLoadingApproval(null);
+  }
 
   // Close drawer on Escape
   const handleKey = useCallback((e: KeyboardEvent) => {
@@ -230,6 +250,41 @@ export default function DashboardClient({
             ))}
           </div>
         </div>
+
+        {/* ── Pending Approvals (Manager) ────────────── */}
+        {pending.length > 0 && (
+          <div className="bg-[#fff5f0] border border-[#ffc4a8] rounded-2xl p-5 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-[#ff4d00] flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>person_alert</span>
+              </div>
+              <div>
+                <p className="font-black text-[#341100] text-sm">{pending.length} employee{pending.length > 1 ? "s" : ""} waiting for approval</p>
+                <p className="text-xs text-[#7c3300]">Approve them to give access and assign to your team</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              {pending.map((u) => (
+                <div key={u.id} className="bg-white rounded-xl p-3 flex items-center gap-3 border border-[#ffd5bc]">
+                  <div className="w-9 h-9 rounded-full bg-[#1f108e] flex items-center justify-center text-white font-bold text-sm shrink-0">
+                    {u.name?.substring(0, 2).toUpperCase()}
+                  </div>
+                  <p className="flex-1 font-semibold text-[#131b2e] text-sm">{u.name}</p>
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => approveEmployee(u.id)} disabled={loadingApproval === u.id}
+                      className="bg-[#d4f5e9] text-[#006b5f] text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-[#b0edd8] transition disabled:opacity-50">
+                      Approve
+                    </button>
+                    <button onClick={() => rejectEmployee(u.id)} disabled={loadingApproval === u.id}
+                      className="bg-[#f2f3ff] text-[#464553] text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-[#eaedff] transition disabled:opacity-50">
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Blockers Spotlight ─────────────────────── */}
         {blockers.length > 0 && (
