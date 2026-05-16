@@ -21,14 +21,14 @@ export default async function TeamPage() {
   // Fetch company info
   const { data: company } = await supabase
     .from("companies")
-    .select("name, employee_invite_code, manager_invite_code")
+    .select("name, manager_invite_code")
     .eq("id", companyId)
     .single();
 
   // Fetch all teams in this company
   const { data: teams } = await supabase
     .from("teams")
-    .select("id, name, created_at")
+    .select("id, name, created_at, invite_code")
     .eq("company_id", companyId)
     .order("created_at", { ascending: true });
 
@@ -45,7 +45,7 @@ export default async function TeamPage() {
   return (
     <TeamManagementClient
       companyId={companyId}
-      company={{ name: company?.name ?? "", employeeCode: company?.employee_invite_code ?? "", managerCode: company?.manager_invite_code ?? "" }}
+      company={{ name: company?.name ?? "", managerCode: company?.manager_invite_code ?? "" }}
       teams={teams ?? []}
       pendingUsers={pendingUsers}
       activeUsers={activeUsers}

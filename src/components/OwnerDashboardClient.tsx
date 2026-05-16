@@ -28,7 +28,6 @@ export type TeamCardData = {
 
 export type OwnerCompanyInfo = {
   name: string;
-  employeeCode: string;
   managerCode: string;
 };
 
@@ -89,7 +88,6 @@ export default function OwnerDashboardClient({
         {/* Invite codes */}
         <div className="flex flex-col gap-2 items-start md:items-end">
           {[
-            { label: "Employee Code", code: company.employeeCode, style: "text-[#1f108e] bg-[#f2f3ff] border-[#dde0ff]" },
             { label: "Manager Code",  code: company.managerCode,  style: "text-[#783200] bg-[#fff5f0] border-[#ffd5bc]" },
           ].map(({ label, code, style }) => (
             <div key={label} className="flex items-center gap-3">

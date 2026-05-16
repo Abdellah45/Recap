@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 type Profile = { id: string; full_name: string; role: string; status: string; team_id: string | null };
-type Team = { id: string; name: string; created_at: string };
+type Team = { id: string; name: string; created_at: string; invite_code: string };
 
 export default function TeamManagementClient({
   companyId,
@@ -15,7 +15,7 @@ export default function TeamManagementClient({
   activeUsers: initialActive,
 }: {
   companyId: string;
-  company: { name: string; employeeCode: string; managerCode: string };
+  company: { name: string; managerCode: string };
   teams: Team[];
   pendingUsers: Profile[];
   activeUsers: Profile[];
@@ -51,9 +51,10 @@ export default function TeamManagementClient({
   async function createTeam() {
     if (!newTeamName.trim()) return;
     setCreatingTeam(true);
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     const { data: team } = await supabase
       .from("teams")
-      .insert({ company_id: companyId, name: newTeamName.trim() })
+      .insert({ company_id: companyId, name: newTeamName.trim(), invite_code: code })
       .select()
       .single();
     if (team) setTeams((t) => [...t, team]);
@@ -83,21 +84,16 @@ export default function TeamManagementClient({
         </div>
         {/* Invite codes */}
         <div className="flex flex-col gap-2 items-end">
-          {[
-            { label: "Employee Code", code: company.employeeCode, color: "text-[#1f108e] bg-[#f2f3ff] border-[#dde0ff]" },
-            { label: "Manager Code", code: company.managerCode, color: "text-[#783200] bg-[#fff5f0] border-[#ffd5bc]" },
-          ].map(({ label, code, color }) => (
-            <div key={label} className="flex items-center gap-3">
-              <p className="text-[9px] font-bold text-[#464553] uppercase tracking-widest">{label}</p>
-              <button
-                onClick={() => navigator.clipboard.writeText(code)}
-                className={`font-mono tracking-widest font-black text-base px-4 py-1.5 rounded-xl border ${color} hover:opacity-80 transition`}
-                title="Click to copy"
-              >
-                {code}
-              </button>
-            </div>
-          ))}
+          <div className="flex items-center gap-3">
+            <p className="text-[9px] font-bold text-[#464553] uppercase tracking-widest">Manager Code</p>
+            <button
+              onClick={() => navigator.clipboard.writeText(company.managerCode)}
+              className="font-mono tracking-widest font-black text-base px-4 py-1.5 rounded-xl border text-[#783200] bg-[#fff5f0] border-[#ffd5bc] hover:opacity-80 transition"
+              title="Click to copy"
+            >
+              {company.managerCode}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -179,8 +175,20 @@ export default function TeamManagementClient({
               const employees = members.filter((u) => u.role === "employee");
               return (
                 <div key={team.id} className="bg-white rounded-2xl p-5 border border-[#eaedff]">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="font-bold text-[#131b2e]">{team.name}</p>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <p className="font-bold text-[#131b2e]">{team.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[9px] font-bold text-[#464553] uppercase tracking-widest">Code:</span>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(team.invite_code)}
+                          className="font-mono tracking-widest font-bold text-xs px-2 py-0.5 rounded-md border text-[#1f108e] bg-[#f2f3ff] border-[#dde0ff] hover:opacity-80 transition"
+                          title="Copy employee invite code"
+                        >
+                          {team.invite_code}
+                        </button>
+                      </div>
+                    </div>
                     <span className="text-[10px] font-bold text-[#464553] bg-[#f2f3ff] px-2 py-1 rounded-full">
                       {members.length} members
                     </span>

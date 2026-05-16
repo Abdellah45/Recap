@@ -45,19 +45,14 @@ export type EmployeeRow = {
   loggedAt: string | null;
 };
 
-export type CompanyInfo = {
-  name: string;
-  invite_code: string;
-};
-
 export default function DashboardClient({
   employees,
-  company,
+  team,
   managerName,
   pendingEmployees = [],
 }: {
   employees: EmployeeRow[];
-  company: CompanyInfo;
+  team: { name: string; invite_code: string };
   managerName: string;
   pendingEmployees?: Array<{ id: string; name: string }>;
 }) {
@@ -164,22 +159,29 @@ export default function DashboardClient({
         {/* ── Header ─────────────────────────────────── */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-10">
           <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="bg-[#f2f3ff] text-[#1f108e] text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-[#dde0ff]">
+                Dashboard
+              </span>
+            </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-[#131b2e]" style={{ fontFamily: "Manrope, sans-serif" }}>
-              Dashboard
+              {team.name}
             </h2>
             <p className="text-[#464553] mt-2 font-medium">
-              {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              Welcome back, {managerName}
             </p>
           </div>
-          <div className="flex flex-col items-start md:items-end gap-1">
-            <p className="text-[10px] font-bold text-[#464553] uppercase tracking-widest">{company.name} · Invite Code</p>
-            <div className="bg-[#f2f3ff] px-5 py-2.5 rounded-2xl text-xl font-mono tracking-[0.3em] font-black text-[#1f108e] border border-[#dde0ff] select-all cursor-copy"
-              title="Click to copy"
-              onClick={() => navigator.clipboard.writeText(company.invite_code)}
-            >
-              {company.invite_code}
+          <div className="bg-[#f2f3ff] rounded-2xl p-4 border border-[#dde0ff] w-full md:w-auto">
+            <p className="text-[9px] font-bold text-[#464553] uppercase tracking-widest mb-2">Team Invite Code</p>
+            <div className="flex items-center gap-3">
+              <p className="font-mono tracking-[0.3em] font-black text-xl text-[#1f108e]">{team.invite_code}</p>
+              <button
+                onClick={() => navigator.clipboard.writeText(team.invite_code)}
+                className="bg-white hover:bg-indigo-50 border border-[#dde0ff] rounded-lg px-3 py-1.5 text-xs font-bold text-[#1f108e] transition"
+              >
+                Copy
+              </button>
             </div>
-            <p className="text-[9px] text-[#9896b0]">Click to copy</p>
           </div>
         </div>
 

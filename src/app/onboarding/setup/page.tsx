@@ -45,7 +45,7 @@ export default function OnboardingSetupPage() {
 
       const { data: company, error: cErr } = await supabase
         .from("companies")
-        .insert({ name: companyName, employee_invite_code: employeeCode, manager_invite_code: managerCode, owner_id: user.id })
+        .insert({ name: companyName, manager_invite_code: managerCode, owner_id: user.id })
         .select()
         .single();
 
@@ -79,18 +79,18 @@ export default function OnboardingSetupPage() {
       router.push("/pending"); router.refresh(); return;
     }
 
-    // ── Employee: join via employee_invite_code ────────────────────────────
-    const { data: company, error: cErr } = await supabase
-      .from("companies")
-      .select("id")
-      .eq("employee_invite_code", code.toUpperCase().trim())
+    // ── Employee: join via team invite_code ────────────────────────────
+    const { data: team, error: tErr } = await supabase
+      .from("teams")
+      .select("id, company_id")
+      .eq("invite_code", code.toUpperCase().trim())
       .single();
 
-    if (cErr || !company) { setError("Invalid employee code. Ask your manager."); setLoading(false); return; }
+    if (tErr || !team) { setError("Invalid team code. Ask your manager."); setLoading(false); return; }
 
     const { error: pErr } = await supabase.from("profiles").insert({
       id: user.id, full_name: fullName, role: "employee",
-      company_id: company.id, language: "en", status: "pending",
+      company_id: team.company_id, team_id: team.id, language: "en", status: "pending",
     });
 
     if (pErr) { setError(pErr.message); setLoading(false); return; }
