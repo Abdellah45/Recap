@@ -5,13 +5,13 @@ const supabase = createClient(
   'sb_publishable_XAXAYlX0fK-jZuWHpSGR3Q_dnxXHDpe'
 );
 
-async function checkTeams() {
-  const { data, error } = await supabase.from('companies').select('*');
+async function dumpProfiles() {
+  const { data, error } = await supabase.from('profiles').select('*');
   if (error) {
-    console.error("ERROR fetching companies:", error.message);
+    console.error("ERROR:", error.message);
   } else {
-    console.log("SUCCESS. Companies:", data);
+    console.log("PROFILES:", data);
   }
 }
 
-checkTeams();
+dumpProfiles();
